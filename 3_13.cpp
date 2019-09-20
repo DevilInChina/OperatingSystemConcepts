@@ -426,28 +426,4 @@ private:
     Node *soldier;
     int SIZE;
 };
-RB_Tree<int> s;
-#define MIN_PID 300
-#define MAX_PID 5000
-int allocate_map(){
-    s.clear();
-    for(int i = MIN_PID; i <= MAX_PID ; ++i){
-        s.insert(i);
-    }
-    return 1;
-}
-int allocate_pid(){
-    if(s.empty()){
-        return -1;
-    }
-    int ret = *s.begin();
-    s.erase(ret);
-    return ret;
-}
-void release_pid(int pid){
-    if(pid>=MIN_PID && pid <= MAX_PID)
-    s.insert(pid);
-}
-
-
 
