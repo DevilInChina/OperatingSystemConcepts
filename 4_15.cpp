@@ -3,8 +3,7 @@
 #include <thread>
 #include <set>
 #include <cstring>
-#include <map>
-#include <unordered_map>
+#include <mutex>
 #include "3_13.cpp"
 RB_Tree<int>pids;
 #define MAX_PID 5000
@@ -12,20 +11,8 @@ RB_Tree<int>pids;
 using namespace std;
 
 #define MaxThread 100
+std::mutex locker;
 
-unordered_map<thread::id,int>Reflection;
-
-bool flag[MAX_PID+1];
-
-void lock(int pid){
-    ///Todo:add a true lock when it comes to Chapter 6
-     //while (!LCK);
-     //LCK = false;
-}
-void unlock(int pid){
-    ///Todo: as upper
-    // LCK = true;
-}
 int cnt = 0;
 int relcnt = 0;
 int allocate_map(){
@@ -38,31 +25,31 @@ int allocate_map(){
     return 1;
 }
 
-int allocate_pid(){
-    if(pids.empty()){
+int allocate_pid() {
+    if (pids.empty()) {
         return -1;
     }
-    lock(-1);
-    int ret = *pids.begin();
+    int ret = -1;
+    while (!locker.try_lock());
+    ret = *pids.begin();
     pids.erase(ret);
     ++cnt;
-    unlock(ret);
+    locker.unlock();
     return ret;
 }
-void release_pid(int pid){
+void release_pid(int pid) {
 
-    if(pid>=MIN_PID && pid <= MAX_PID) {
-        lock(pid);
+    if (pid >= MIN_PID && pid <= MAX_PID) {
+        while (!locker.try_lock());
         pids.insert(pid);
         ++relcnt;
-        unlock(pid);
+        locker.unlock();
     }
 
 }
 
 
 void process(int stat){
-
     int k = allocate_pid();
     if(k==-1){
         cout<<"Allocate False"<<endl;
@@ -82,7 +69,6 @@ int main() {
 
     for(int i = 0;i < MaxThread ; ++i){
         Thread[i] = thread(process,i);
-        Reflection[Thread[i].get_id()] = i;
     }
     for(int i = 0;i < MaxThread ; ++i){
         Thread[i].join();
